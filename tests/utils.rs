@@ -1,14 +1,11 @@
+use lettre::transport::smtp::authentication::Credentials;
 use muttr_smtp_server::{
     config::Config,
     utils::telemetry::{create_subscriber, init_subscriber},
 };
+use secrecy::ExposeSecret;
 use std::net::TcpListener;
-use uuid::Uuid;
 use once_cell::sync::Lazy;
-
-const TEST_USER_EMAIL: &str = "testuser@youwish.com";
-const TEST_USER_HANDLE: &str = "test.user";
-const TEST_USER_PASSWORD: &str = "Testpassw0rd!"; 
 
 static TRACING: Lazy<()> = Lazy::new(|| {
     let name = "test".to_string();
@@ -38,7 +35,13 @@ pub async fn spawn_app() -> TestApp {
         .expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();
     let address = format!("http://127.0.0.1:{}", port);
-    let server = muttr_smtp_server::startup::run(listener).expect("Failed to bind address");
+
+    let smtp_credentials = Credentials::new(
+        config.smtp.username.clone(), config.smtp.password.expose_secret().clone()
+    );
+
+    let server = muttr_smtp_server::startup::run(listener, smtp_credentials)
+        .expect("Failed to bind address");
     let _ = tokio::spawn(server);
 
     TestApp {

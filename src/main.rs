@@ -1,4 +1,6 @@
 use std::net::TcpListener;
+use secrecy::ExposeSecret;
+use lettre::transport::smtp::authentication::Credentials;
 use muttr_smtp_server::{
     startup::run,
     config::get_config,
@@ -14,9 +16,12 @@ async fn main() -> std::io::Result<()> {
     );
     init_subscriber(subscriber);
     let config = get_config().expect("Failed to read config file");
+    let smtp_credentials = Credentials::new(
+        config.smtp.username.clone(), config.smtp.password.expose_secret().clone()
+    );
     
     let address = format!("{}:{}", config.app.host, config.app.port);
     let listener = TcpListener::bind(address)
         .expect(&format!("Failed to bind to port {}", config.app.port));
-    run(listener)?.await
+    run(listener, smtp_credentials)?.await
 }

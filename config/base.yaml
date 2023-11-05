@@ -1,2 +1,5 @@
 app:
   port: 8000
+smtp:
+  username: muttr_smtp
+  password: password

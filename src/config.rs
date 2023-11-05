@@ -1,3 +1,5 @@
+use secrecy::Secret;
+
 #[derive(PartialEq)]
 pub enum Env {
     Local,
@@ -36,12 +38,19 @@ impl From<String> for Env {
 #[derive(serde::Deserialize)]
 pub struct Config {
     pub app: AppConfig,
+    pub smtp: SmtpConfig,
 }
 
 #[derive(serde::Deserialize)]
 pub struct AppConfig {
     pub port: u16,
     pub host: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct SmtpConfig {
+    pub username: String,
+    pub password: Secret<String>,
 }
 
 pub fn get_config() -> Result<Config, config::ConfigError> {
