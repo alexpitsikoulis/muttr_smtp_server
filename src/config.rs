@@ -1,4 +1,5 @@
-use secrecy::Secret;
+use lettre::transport::smtp::authentication::Credentials;
+use secrecy::{Secret, ExposeSecret};
 
 #[derive(PartialEq)]
 pub enum Env {
@@ -35,22 +36,29 @@ impl From<String> for Env {
     }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct Config {
     pub app: AppConfig,
     pub smtp: SmtpConfig,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct AppConfig {
     pub port: u16,
     pub host: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct SmtpConfig {
+    pub port: u16,
     pub username: String,
     pub password: Secret<String>,
+}
+
+impl SmtpConfig {
+    pub fn get_credentials(&self) -> Credentials {
+        Credentials::new(self.username.clone(), self.password.expose_secret().clone())
+    }
 }
 
 pub fn get_config() -> Result<Config, config::ConfigError> {

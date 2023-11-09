@@ -9,10 +9,10 @@ const EMAIL_FROM: &'static str = "noreply@muttr.com";
 pub struct Mailer(AsyncSmtpTransport<Tokio1Executor>);
 
 impl Mailer {
-    pub fn new(smtp_credentials: Credentials) -> Self {
+    pub fn new(smtp_credentials: Credentials, port: u16) -> Self {
         match AsyncSmtpTransport::<Tokio1Executor>::relay("smtp.muttr.com") {
             Ok(builder) => {
-                Mailer(builder.credentials(smtp_credentials).build())
+                Mailer(builder.credentials(smtp_credentials).port(port).build())
             },
             Err(e) => panic!("Failed to init SMTP transport builder {:?}", e),
         }
